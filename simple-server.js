@@ -31,6 +31,9 @@ if (!API_KEY) {
 const server = http.createServer(async (req, res) => {
     const parsedUrl = url.parse(req.url, true);
     const pathname = parsedUrl.pathname;
+    
+    // Log all incoming requests for debugging
+    console.log(`[${new Date().toISOString()}] ${req.method} ${pathname} from ${req.headers.host}`);
 
     // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -468,8 +471,8 @@ Output ONLY the HTML code, starting with <!DOCTYPE html>.`;
     }
 });
 
-// Start server
-server.listen(PORT, '0.0.0.0', () => {
+// Start server - simplified for Railway compatibility
+server.listen(PORT, () => {
     console.log(`
 ╔════════════════════════════════════════════════════╗
 ║                                                    ║
@@ -477,11 +480,17 @@ server.listen(PORT, '0.0.0.0', () => {
 ║                                                    ║
 ║   Server running on port: ${PORT}                     ║
 ║                                                    ║
-║   Local:  http://localhost:${PORT}                    ║
-║   Public: Configure in Railway dashboard          ║
+║   Ready to receive requests!                      ║
 ║                                                    ║
-║   Press Ctrl+C to stop the server                 ║
+║   Environment: ${process.env.NODE_ENV || 'development'}           ║
+║   API Key: ${API_KEY ? 'Configured ✓' : 'Missing ✗'}               ║
 ║                                                    ║
 ╚════════════════════════════════════════════════════╝
     `);
+    
+    // Additional debug info
+    console.log('Server Details:');
+    console.log('- Listening on all interfaces');
+    console.log('- PORT:', PORT);
+    console.log('- Process PID:', process.pid);
 });
