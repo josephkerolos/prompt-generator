@@ -153,8 +153,7 @@ const server = http.createServer(async (req, res) => {
                         'x-api-key': API_KEY,
                         'anthropic-version': '2023-06-01',
                         'Content-Length': Buffer.byteLength(postData)
-                    },
-                    timeout: 30000 // 30 second timeout for Upwork endpoint
+                    }
                 };
 
                 const apiReq = https.request(options, (apiRes) => {
@@ -174,11 +173,6 @@ const server = http.createServer(async (req, res) => {
                     });
                 });
 
-                apiReq.on('timeout', () => {
-                    apiReq.destroy();
-                    reject(new Error('Request timeout'));
-                });
-                
                 apiReq.on('error', reject);
                 apiReq.write(postData);
                 apiReq.end();
@@ -326,8 +320,7 @@ Output ONLY HTML code from <!DOCTYPE html> to </html>.`;
                                 'x-api-key': API_KEY,
                                 'anthropic-version': '2023-06-01',
                                 'Content-Length': Buffer.byteLength(postData)
-                            },
-                            timeout: 90000 // 90 second timeout (under Railway's 100s limit)
+                            }
                         };
 
                         const apiReq = https.request(options, (apiRes) => {
@@ -360,17 +353,7 @@ Output ONLY HTML code from <!DOCTYPE html> to </html>.`;
                             });
                         });
 
-                        apiReq.on('timeout', () => {
-                            apiReq.destroy();
-                            if (!isRetry) {
-                                console.log('Request timeout, retrying with reduced tokens...');
-                                makeAPICall(prompt, 3500, true)
-                                    .then(resolve)
-                                    .catch(reject);
-                            } else {
-                                reject(new Error('Request timed out. The server is busy - please try again in a moment.'));
-                            }
-                        });
+                        // No timeout handler - let request complete
 
                         apiReq.on('error', (error) => {
                             if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
