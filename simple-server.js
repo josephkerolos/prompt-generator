@@ -5,13 +5,12 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 
-// Load environment variables from .env file in development
-if (process.env.NODE_ENV !== 'production') {
-    try {
-        require('dotenv').config();
-    } catch (e) {
-        // dotenv not installed, that's ok in production
-    }
+// Load environment variables from .env file if dotenv is available
+try {
+    require('dotenv').config();
+    console.log('Loaded .env file');
+} catch (e) {
+    console.log('No .env file or dotenv not installed (normal in production)');
 }
 
 const PORT = process.env.PORT || 3000;
