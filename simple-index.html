@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business UI Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .generate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            flex: 1;
+            transition: transform 0.2s;
+        }
+        
+        .generate-btn.custom {
+            background: linear-gradient(135deg, #764ba2 0%, #f953c6 100%);
+        }
+        
+        .generate-btn.upwork {
+            background: linear-gradient(135deg, #14a800 0%, #6fda44 100%);
+            width: 100%;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .custom-input {
+            margin-bottom: 20px;
+        }
+        
+        #customDescription {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+            margin-bottom: 10px;
+        }
+        
+        #customDescription:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .idea-preview {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .idea-title {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .idea-description {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .idea-features {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .idea-features li {
+            margin-left: 20px;
+            margin-top: 5px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .action-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .action-btn.primary:hover {
+            background: #764ba2;
+            border-color: #764ba2;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result-section {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+        }
+        
+        .download-section {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Business UI Generator</h1>
+        <p class="subtitle">Generate modern AI/startup ideas and create their UI designs</p>
+        
+        <div class="button-group">
+            <button class="generate-btn" onclick="generateIdea()">
+                🎲 Generate Random AI Business
+            </button>
+            <button class="generate-btn custom" onclick="toggleCustom()">
+                ✏️ Use Custom Description
+            </button>
+        </div>
+        
+        <div class="button-group" style="margin-top: 10px;">
+            <button class="generate-btn upwork" onclick="generateFromUpwork()">
+                🔥 Generate from Live Upwork Jobs
+            </button>
+        </div>
+        
+        <div class="custom-input" id="customInput" style="display: none;">
+            <textarea id="customDescription" placeholder="Describe your AI business idea...&#10;Example: AI-powered code review tool that suggests improvements using GPT-4"></textarea>
+            <button class="action-btn primary" onclick="generateCustomIdea()">Generate with Custom Idea</button>
+        </div>
+        
+        <div class="idea-preview" id="ideaPreview">
+            <div class="idea-title" id="ideaTitle"></div>
+            <div class="idea-description" id="ideaDescription"></div>
+            <ul class="idea-features" id="ideaFeatures"></ul>
+            
+            <div class="action-buttons">
+                <button class="action-btn" onclick="generateIdea()">New Idea</button>
+                <button class="action-btn primary" onclick="createUI()">Create UI Design</button>
+            </div>
+            
+            <div id="businessInfo" style="display: none; margin-top: 20px; padding: 15px; background: #f0f4f8; border-radius: 8px;">
+                <h3 style="color: #667eea; margin-bottom: 10px;">About This Business</h3>
+                <p id="businessDescription" style="color: #333; margin-bottom: 15px;"></p>
+                <h4 style="color: #667eea; margin-bottom: 8px;">Tech Stack Required:</h4>
+                <div id="techStack" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Creating your UI design...</p>
+        </div>
+        
+        <div class="result-section" id="resultSection">
+            <iframe id="resultFrame"></iframe>
+            <div class="download-section">
+                <button class="action-btn" onclick="viewFullscreen()">View Fullscreen</button>
+                <button class="action-btn primary" onclick="downloadHTML()">Download HTML</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="simple-randomizer.js"></script>
+    <script>
+        const generator = new SimpleBusinessGenerator();
+        let currentIdea = null;
+        let currentHTML = null;
+        
+        function toggleCustom() {
+            const customInput = document.getElementById('customInput');
+            if (customInput.style.display === 'none') {
+                customInput.style.display = 'block';
+                document.getElementById('customDescription').focus();
+            } else {
+                customInput.style.display = 'none';
+            }
+        }
+        
+        function generateIdea() {
+            currentIdea = generator.generateBusinessIdea();
+            showIdea();
+        }
+        
+        function generateCustomIdea() {
+            const customDesc = document.getElementById('customDescription').value.trim();
+            if (!customDesc) {
+                alert('Please enter a description for your business idea');
+                return;
+            }
+            
+            currentIdea = generator.generateBusinessIdea(customDesc);
+            showIdea();
+            
+            // Hide custom input after generating
+            document.getElementById('customInput').style.display = 'none';
+        }
+        
+        async function generateFromUpwork() {
+            // Show loading state
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Fetching Upwork Jobs...';
+            btn.disabled = true;
+            
+            try {
+                // Fetch Upwork jobs
+                const response = await fetch('http://localhost:3000/api/scrape-upwork');
+                const data = await response.json();
+                
+                if (data.success && data.jobs && data.jobs.length > 0) {
+                    // Pick a random job from the list
+                    const randomJob = data.jobs[Math.floor(Math.random() * data.jobs.length)];
+                    
+                    // Transform it into a business idea
+                    const transformedIdea = transformJobToIdea(randomJob);
+                    
+                    // Generate the idea
+                    currentIdea = generator.generateBusinessIdea(transformedIdea);
+                    showIdea();
+                    
+                    // Show a message about the source
+                    const descEl = document.getElementById('ideaDescription');
+                    let sourceMsg = '';
+                    if (data.source === 'live') {
+                        sourceMsg = '<br><small style="color: #14a800;">🔴 LIVE from Upwork (fetched ' + new Date(data.timestamp).toLocaleTimeString() + ')</small>';
+                    } else {
+                        sourceMsg = '<br><small style="color: #ffa500;">📋 Based on common Upwork AI job types (cached)</small>';
+                    }
+                    descEl.innerHTML = currentIdea.metadata.type + sourceMsg;
+                } else {
+                    alert('Could not fetch Upwork jobs. Please try again.');
+                }
+            } catch (error) {
+                alert('Error fetching Upwork jobs: ' + error.message);
+            } finally {
+                // Restore button
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+        
+        function transformJobToIdea(jobText) {
+            // Clean up and transform the job text into a business idea
+            let idea = jobText;
+            
+            // Remove common job posting phrases
+            idea = idea.replace(/looking for|need|want|require|seeking|hiring/gi, '');
+            idea = idea.replace(/developer|freelancer|expert|professional|contractor/gi, '');
+            idea = idea.replace(/to build|to create|to develop|to make/gi, '');
+            
+            // Add context if needed
+            if (!idea.toLowerCase().includes('platform') && !idea.toLowerCase().includes('tool') && 
+                !idea.toLowerCase().includes('system') && !idea.toLowerCase().includes('app')) {
+                idea = 'Platform for ' + idea;
+            }
+            
+            // Ensure it mentions AI if not already
+            if (!idea.toLowerCase().includes('ai') && !idea.toLowerCase().includes('gpt') && 
+                !idea.toLowerCase().includes('llm') && !idea.toLowerCase().includes('machine learning')) {
+                idea = 'AI-powered ' + idea;
+            }
+            
+            return idea.trim();
+        }
+        
+        function showIdea() {
+            // Show the idea preview
+            document.getElementById('ideaPreview').style.display = 'block';
+            document.getElementById('ideaTitle').textContent = currentIdea.metadata.name;
+            document.getElementById('ideaDescription').textContent = currentIdea.metadata.type;
+            
+            // Show features
+            const featuresList = document.getElementById('ideaFeatures');
+            featuresList.innerHTML = '';
+            currentIdea.metadata.features.forEach(feature => {
+                const li = document.createElement('li');
+                li.textContent = feature;
+                featuresList.appendChild(li);
+            });
+            
+            // Hide result and business info when showing new idea
+            document.getElementById('resultSection').style.display = 'none';
+            document.getElementById('businessInfo').style.display = 'none';
+        }
+        
+        async function createUI() {
+            if (!currentIdea) return;
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('ideaPreview').style.display = 'none';
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prompt: currentIdea.prompt,
+                        businessName: currentIdea.metadata.name,
+                        businessType: currentIdea.metadata.type
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.html) {
+                    currentHTML = data.html;
+                    displayResult(data.html);
+                    
+                    // Display business info
+                    if (data.description || data.techStack) {
+                        document.getElementById('businessInfo').style.display = 'block';
+                        
+                        if (data.description) {
+                            document.getElementById('businessDescription').textContent = data.description;
+                        }
+                        
+                        if (data.techStack && data.techStack.length > 0) {
+                            const techStackDiv = document.getElementById('techStack');
+                            techStackDiv.innerHTML = '';
+                            data.techStack.forEach(tech => {
+                                const techBadge = document.createElement('span');
+                                techBadge.style.cssText = 'background: #667eea; color: white; padding: 5px 12px; border-radius: 20px; font-size: 14px;';
+                                techBadge.textContent = tech;
+                                techStackDiv.appendChild(techBadge);
+                            });
+                        }
+                    }
+                } else {
+                    alert('Error generating UI: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('ideaPreview').style.display = 'block';
+            }
+        }
+        
+        function displayResult(html) {
+            const iframe = document.getElementById('resultFrame');
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            iframe.src = url;
+            
+            document.getElementById('resultSection').style.display = 'block';
+            
+            // Clean up
+            iframe.onload = () => {
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+            };
+        }
+        
+        function viewFullscreen() {
+            if (!currentHTML) return;
+            
+            const blob = new Blob([currentHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        }
+        
+        function downloadHTML() {
+            if (!currentHTML || !currentIdea) return;
+            
+            const blob = new Blob([currentHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const filename = `${currentIdea.metadata.name}_${timestamp}.html`;
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        }
+    </script>
+</body>
+</html>
