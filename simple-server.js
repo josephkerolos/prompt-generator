@@ -137,7 +137,7 @@ const server = http.createServer(async (req, res) => {
                 }
                 
                 const postData = JSON.stringify({
-                    model: 'claude-opus-4-1-20250805',  // Opus 4.1 for maximum quality
+                    model: 'claude-3-haiku-20240307',  // Haiku for fast Upwork generation
                     messages: [{ role: 'user', content: prompt }],
                     max_tokens: maxTokens,
                     temperature: 0.7
@@ -153,7 +153,8 @@ const server = http.createServer(async (req, res) => {
                         'x-api-key': API_KEY,
                         'anthropic-version': '2023-06-01',
                         'Content-Length': Buffer.byteLength(postData)
-                    }
+                    },
+                    timeout: 30000 // 30 second timeout for Upwork endpoint
                 };
 
                 const apiReq = https.request(options, (apiRes) => {
@@ -173,6 +174,11 @@ const server = http.createServer(async (req, res) => {
                     });
                 });
 
+                apiReq.on('timeout', () => {
+                    apiReq.destroy();
+                    reject(new Error('Request timeout'));
+                });
+                
                 apiReq.on('error', reject);
                 apiReq.write(postData);
                 apiReq.end();
