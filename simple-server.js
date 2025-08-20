@@ -129,7 +129,7 @@ const server = http.createServer(async (req, res) => {
         Make them specific and varied - include different industries and use cases.`;
         
         // Use the same makeAPICall function we have for Claude
-        const makeAPICall = (prompt, maxTokens = 2000) => {
+        const makeAPICall = (prompt, maxTokens = 1500) => {
             return new Promise((resolve, reject) => {
                 if (!API_KEY) {
                     reject(new Error('CLAUDE_API_KEY not configured. Please set it in Railway Variables.'));
@@ -271,26 +271,23 @@ Format your response as JSON like this:
 
 Return ONLY the JSON, nothing else.`;
 
-                // HTML generation prompt for high-quality output
-                const htmlPrompt = `You are building a SOPHISTICATED, PROFESSIONAL web interface for "${requestData.businessName}".
+                // Optimized HTML generation prompt for Railway
+                const htmlPrompt = `Create a professional web interface for "${requestData.businessName}".
 
 ${requestData.prompt}
 
-CRITICAL REQUIREMENTS:
-1. Page title MUST be: "${requestData.businessName}"
-2. Business name "${requestData.businessName}" must appear prominently in the interface
-3. Create a REALISTIC, FUNCTIONING APPLICATION INTERFACE - not a simple demo
-4. Include RICH, DETAILED, SPECIFIC data that matches the use case
-5. Use MODERN, PROFESSIONAL design with gradients, shadows, animations
-6. Show the application IN ACTIVE USE with real data
-7. Include interactive elements, hover effects, transitions
-8. Use sophisticated color schemes and typography
-9. Make it look like a $50,000+ custom application
-10. Include multiple sections, features, and data visualizations
+Requirements:
+- Title: "${requestData.businessName}"
+- Show business name prominently
+- Create a realistic, functioning application interface
+- Include specific, relevant data
+- Modern design with gradients and shadows
+- Interactive elements and smooth transitions
+- Professional color scheme
+- Multiple features and sections
 
-Generate a COMPLETE, DETAILED HTML file with inline CSS and JavaScript.
-Aim for 500-800 lines of high-quality code.
-Output ONLY the HTML code, starting with <!DOCTYPE html> and ending with </html>.`;
+Generate a complete HTML file (500-700 lines) with inline CSS/JS.
+Output ONLY HTML code from <!DOCTYPE html> to </html>.`;
                 
                 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
                 console.log('📋 Business Idea:', requestData.businessName || 'Generated');
@@ -298,7 +295,7 @@ Output ONLY the HTML code, starting with <!DOCTYPE html> and ending with </html>
                 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
                 
                 // Function to make API call with timeout and retry
-                const makeAPICall = (prompt, maxTokens = 8000, isRetry = false) => {
+                const makeAPICall = (prompt, maxTokens = 5000, isRetry = false) => {
                     return new Promise((resolve, reject) => {
                         if (!API_KEY) {
                             reject(new Error('CLAUDE_API_KEY not configured. Please set it in Railway Variables.'));
@@ -324,7 +321,7 @@ Output ONLY the HTML code, starting with <!DOCTYPE html> and ending with </html>
                                 'anthropic-version': '2023-06-01',
                                 'Content-Length': Buffer.byteLength(postData)
                             },
-                            timeout: 120000 // 120 second timeout for Opus 4.1
+                            timeout: 90000 // 90 second timeout (under Railway's 100s limit)
                         };
 
                         const apiReq = https.request(options, (apiRes) => {
@@ -336,7 +333,7 @@ Output ONLY the HTML code, starting with <!DOCTYPE html> and ending with </html>
                                     if (apiRes.statusCode === 504) {
                                         if (!isRetry) {
                                             console.log('Got 504, retrying with reduced tokens...');
-                                            makeAPICall(prompt, 6000, true)
+                                            makeAPICall(prompt, 3500, true)
                                                 .then(resolve)
                                                 .catch(reject);
                                         } else {
@@ -361,7 +358,7 @@ Output ONLY the HTML code, starting with <!DOCTYPE html> and ending with </html>
                             apiReq.destroy();
                             if (!isRetry) {
                                 console.log('Request timeout, retrying with reduced tokens...');
-                                makeAPICall(prompt, 6000, true)
+                                makeAPICall(prompt, 3500, true)
                                     .then(resolve)
                                     .catch(reject);
                             } else {
