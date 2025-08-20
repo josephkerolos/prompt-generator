@@ -302,7 +302,7 @@
             
             try {
                 // Fetch Upwork jobs
-                const response = await fetch('http://localhost:3000/api/scrape-upwork');
+                const response = await fetch('/api/scrape-upwork');
                 const data = await response.json();
                 
                 if (data.success && data.jobs && data.jobs.length > 0) {
@@ -389,7 +389,7 @@
             document.getElementById('ideaPreview').style.display = 'none';
             
             try {
-                const response = await fetch('http://localhost:3000/api/generate', {
+                const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
