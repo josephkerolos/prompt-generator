@@ -17,10 +17,15 @@ if (process.env.NODE_ENV !== 'production') {
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.CLAUDE_API_KEY;
 
+// Log environment info for debugging
+console.log('Environment:', process.env.NODE_ENV || 'development');
+console.log('Port:', PORT);
+console.log('API Key configured:', API_KEY ? 'Yes' : 'No');
+
 if (!API_KEY) {
-    console.error('ERROR: CLAUDE_API_KEY environment variable is required');
-    console.error('Please set it in your environment or in a .env file');
-    process.exit(1);
+    console.warn('WARNING: CLAUDE_API_KEY environment variable not found');
+    console.warn('The app will run but API calls will fail');
+    // Don't exit - let the app run and show errors when API is called
 }
 
 // Create HTTP server
@@ -112,6 +117,11 @@ const server = http.createServer(async (req, res) => {
         // Use the same makeAPICall function we have for Claude
         const makeAPICall = (prompt, maxTokens = 2000) => {
             return new Promise((resolve, reject) => {
+                if (!API_KEY) {
+                    reject(new Error('CLAUDE_API_KEY not configured. Please set it in Railway Variables.'));
+                    return;
+                }
+                
                 const postData = JSON.stringify({
                     model: 'claude-3-haiku-20240307',  // Using Haiku for speed
                     messages: [{ role: 'user', content: prompt }],
@@ -269,6 +279,11 @@ Output ONLY the HTML code, starting with <!DOCTYPE html>.`;
                 // Function to make API call with timeout and retry
                 const makeAPICall = (prompt, maxTokens = 3000, isRetry = false) => {
                     return new Promise((resolve, reject) => {
+                        if (!API_KEY) {
+                            reject(new Error('CLAUDE_API_KEY not configured. Please set it in Railway Variables.'));
+                            return;
+                        }
+                        
                         // Use Haiku for now as Opus is experiencing delays
                         const postData = JSON.stringify({
                             model: 'claude-3-haiku-20240307',
