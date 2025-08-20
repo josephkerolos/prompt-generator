@@ -471,8 +471,8 @@ Output ONLY the HTML code, starting with <!DOCTYPE html>.`;
     }
 });
 
-// Start server - simplified for Railway compatibility
-server.listen(PORT, () => {
+// Start server - bind to 0.0.0.0 for Docker/Railway compatibility
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`
 ╔════════════════════════════════════════════════════╗
 ║                                                    ║
