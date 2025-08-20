@@ -199,69 +199,7 @@
             display: flex;
             gap: 10px;
         }
-        
-        /* Screenshot modal styles */
-        .screenshot-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            padding: 20px;
-            overflow: auto;
-        }
-        
-        .screenshot-content {
-            background: white;
-            border-radius: 10px;
-            max-width: 90%;
-            max-height: 90%;
-            margin: auto;
-            padding: 20px;
-            position: relative;
-        }
-        
-        .screenshot-preview {
-            max-width: 100%;
-            max-height: 60vh;
-            display: block;
-            margin: 20px auto;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-        }
-        
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        
-        .close-modal {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 28px;
-            cursor: pointer;
-            color: #666;
-        }
-        
-        .close-modal:hover {
-            color: #000;
-        }
-        
-        .capturing-message {
-            text-align: center;
-            padding: 20px;
-            font-size: 16px;
-            color: #667eea;
-        }
     </style>
-    <!-- html2canvas library for screenshot functionality -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -315,19 +253,8 @@
             <iframe id="resultFrame"></iframe>
             <div class="download-section">
                 <button class="action-btn" onclick="viewFullscreen()">View Fullscreen</button>
-                <button class="action-btn" onclick="captureScreenshot()">📸 Screenshot</button>
+                <button class="action-btn" onclick="saveAsPDF()">📄 Save as PDF</button>
                 <button class="action-btn primary" onclick="downloadHTML()">Download HTML</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Screenshot Preview Modal -->
-    <div id="screenshotModal" class="screenshot-modal">
-        <div class="screenshot-content">
-            <span class="close-modal" onclick="closeScreenshotModal()">&times;</span>
-            <h2 style="text-align: center; color: #333;">Screenshot Preview</h2>
-            <div id="screenshotContainer">
-                <div class="capturing-message">Capturing screenshot...</div>
             </div>
         </div>
     </div>
@@ -553,106 +480,40 @@
             setTimeout(() => URL.revokeObjectURL(url), 100);
         }
         
-        // Screenshot functionality
-        function captureScreenshot() {
+        // Save as PDF functionality
+        function saveAsPDF() {
             if (!currentHTML) {
                 alert('Please generate a UI first');
                 return;
             }
             
-            // Show modal with loading message
-            const modal = document.getElementById('screenshotModal');
-            const container = document.getElementById('screenshotContainer');
-            modal.style.display = 'block';
-            container.innerHTML = '<div class="capturing-message">Capturing screenshot...</div>';
+            // Add print styles to the HTML for better PDF output
+            const printStyles = `
+                <style>
+                    @media print {
+                        body { margin: 0; }
+                        * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+                    }
+                </style>
+            `;
             
-            // Create a temporary div to render the HTML
-            const tempDiv = document.createElement('div');
-            tempDiv.style.position = 'absolute';
-            tempDiv.style.left = '-9999px';
-            tempDiv.style.width = '1200px'; // Fixed width for consistent screenshots
-            tempDiv.innerHTML = currentHTML;
+            // Insert print styles before closing head tag
+            const htmlWithPrintStyles = currentHTML.replace('</head>', printStyles + '</head>');
             
-            // Extract and apply styles from the HTML
-            const tempDoc = new DOMParser().parseFromString(currentHTML, 'text/html');
-            const styles = tempDoc.querySelectorAll('style');
-            styles.forEach(style => {
-                const newStyle = document.createElement('style');
-                newStyle.textContent = style.textContent;
-                tempDiv.appendChild(newStyle);
-            });
+            // Create blob and open in new window
+            const blob = new Blob([htmlWithPrintStyles], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const printWindow = window.open(url, '_blank');
             
-            document.body.appendChild(tempDiv);
-            
-            // Wait for content to render, then capture
-            setTimeout(() => {
-                html2canvas(tempDiv, {
-                    scale: 2, // Higher quality
-                    useCORS: true,
-                    logging: false,
-                    backgroundColor: '#ffffff'
-                }).then(canvas => {
-                    // Remove temp div
-                    document.body.removeChild(tempDiv);
-                    
-                    // Display the screenshot
-                    const img = document.createElement('img');
-                    img.src = canvas.toDataURL('image/png');
-                    img.className = 'screenshot-preview';
-                    
-                    // Create download button
-                    const downloadBtn = document.createElement('button');
-                    downloadBtn.className = 'action-btn primary';
-                    downloadBtn.textContent = 'Download Screenshot';
-                    downloadBtn.onclick = () => downloadScreenshot(canvas);
-                    
-                    const closeBtn = document.createElement('button');
-                    closeBtn.className = 'action-btn';
-                    closeBtn.textContent = 'Close';
-                    closeBtn.onclick = closeScreenshotModal;
-                    
-                    const buttonContainer = document.createElement('div');
-                    buttonContainer.className = 'modal-buttons';
-                    buttonContainer.appendChild(downloadBtn);
-                    buttonContainer.appendChild(closeBtn);
-                    
-                    // Update modal content
-                    container.innerHTML = '';
-                    container.appendChild(img);
-                    container.appendChild(buttonContainer);
-                }).catch(err => {
-                    console.error('Screenshot failed:', err);
-                    document.body.removeChild(tempDiv);
-                    container.innerHTML = '<div class="capturing-message" style="color: red;">Failed to capture screenshot. Please try again.</div>';
-                });
-            }, 500); // Give time for styles to apply
-        }
-        
-        function downloadScreenshot(canvas) {
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-            const filename = `${currentIdea.metadata.name}_screenshot_${timestamp}.png`;
-            
-            canvas.toBlob(blob => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 100);
-            }, 'image/png');
-        }
-        
-        function closeScreenshotModal() {
-            document.getElementById('screenshotModal').style.display = 'none';
-        }
-        
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('screenshotModal');
-            if (event.target === modal) {
-                closeScreenshotModal();
+            // Wait for window to load, then trigger print
+            if (printWindow) {
+                printWindow.onload = function() {
+                    setTimeout(() => {
+                        printWindow.print();
+                        // Clean up blob URL after a delay
+                        setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    }, 500); // Small delay to ensure styles are applied
+                };
             }
         }
     </script>
