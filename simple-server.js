@@ -137,10 +137,10 @@ const server = http.createServer(async (req, res) => {
                 }
                 
                 const postData = JSON.stringify({
-                    model: 'claude-opus-4-1-20250805',  // Back to Opus 4.1 for quality
+                    model: 'claude-3-5-sonnet-20241022',  // Sonnet 3.5 for quality + speed
                     messages: [{ role: 'user', content: prompt }],
                     max_tokens: maxTokens,
-                    temperature: 0.5
+                    temperature: 0.7
                 });
 
                 const options = {
@@ -298,19 +298,19 @@ Output ONLY the HTML code, starting with <!DOCTYPE html> and ending with </html>
                 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
                 
                 // Function to make API call with timeout and retry
-                const makeAPICall = (prompt, maxTokens = 6000, isRetry = false) => {
+                const makeAPICall = (prompt, maxTokens = 4500, isRetry = false) => {
                     return new Promise((resolve, reject) => {
                         if (!API_KEY) {
                             reject(new Error('CLAUDE_API_KEY not configured. Please set it in Railway Variables.'));
                             return;
                         }
                         
-                        // Use Opus 4.1 for high-quality generation
+                        // Use Claude 3.5 Sonnet for balance of quality and speed
                         const postData = JSON.stringify({
-                            model: 'claude-opus-4-1-20250805',
+                            model: 'claude-3-5-sonnet-20241022',
                             messages: [{ role: 'user', content: prompt }],
                             max_tokens: maxTokens,
-                            temperature: 0.5
+                            temperature: 0.7
                         });
 
                         const options = {
@@ -324,7 +324,7 @@ Output ONLY the HTML code, starting with <!DOCTYPE html> and ending with </html>
                                 'anthropic-version': '2023-06-01',
                                 'Content-Length': Buffer.byteLength(postData)
                             },
-                            timeout: 60000 // 60 second timeout for Opus quality
+                            timeout: 45000 // 45 second timeout
                         };
 
                         const apiReq = https.request(options, (apiRes) => {
@@ -336,7 +336,7 @@ Output ONLY the HTML code, starting with <!DOCTYPE html> and ending with </html>
                                     if (apiRes.statusCode === 504) {
                                         if (!isRetry) {
                                             console.log('Got 504, retrying with reduced tokens...');
-                                            makeAPICall(prompt, 4000, true)
+                                            makeAPICall(prompt, 3000, true)
                                                 .then(resolve)
                                                 .catch(reject);
                                         } else {
@@ -361,7 +361,7 @@ Output ONLY the HTML code, starting with <!DOCTYPE html> and ending with </html>
                             apiReq.destroy();
                             if (!isRetry) {
                                 console.log('Request timeout, retrying with reduced tokens...');
-                                makeAPICall(prompt, 4000, true)
+                                makeAPICall(prompt, 3000, true)
                                     .then(resolve)
                                     .catch(reject);
                             } else {
