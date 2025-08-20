@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Business UI Generator</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🚀</text></svg>">
     <style>
         * {
             margin: 0;
@@ -382,7 +383,7 @@
             document.getElementById('businessInfo').style.display = 'none';
         }
         
-        async function createUI() {
+        async function createUI(retryCount = 0) {
             if (!currentIdea) return;
             
             // Show loading
@@ -401,6 +402,10 @@
                         businessType: currentIdea.metadata.type
                     })
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`Server responded with ${response.status}`);
+                }
                 
                 const data = await response.json();
                 
@@ -428,13 +433,41 @@
                         }
                     }
                 } else {
-                    alert('Error generating UI: ' + (data.error || 'Unknown error'));
+                    throw new Error(data.error || 'Failed to generate UI');
                 }
             } catch (error) {
-                alert('Error: ' + error.message);
-            } finally {
+                console.error('Error creating UI:', error);
+                
+                // Handle network errors with retry
+                if ((error.message.includes('fetch') || error.message.includes('network') || error.message.includes('ERR_NETWORK')) && retryCount < 2) {
+                    console.log('Network error detected, retrying in 2 seconds...');
+                    setTimeout(() => {
+                        createUI(retryCount + 1);
+                    }, 2000);
+                    return;
+                }
+                
+                // Show user-friendly error messages
+                let errorMessage = 'Failed to generate UI. ';
+                if (error.message.includes('fetch') || error.message.includes('network')) {
+                    errorMessage += 'Network connection issue. Please check your connection and try again.';
+                } else if (error.message.includes('500') || error.message.includes('502') || error.message.includes('504')) {
+                    errorMessage += 'Server is busy. Please wait a moment and try again.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                alert(errorMessage);
+                
+                // Hide loading and show idea preview again
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('ideaPreview').style.display = 'block';
+            } finally {
+                // Only hide loading if not retrying
+                if (retryCount >= 2 || !document.getElementById('loading').style.display === 'block') {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('ideaPreview').style.display = 'block';
+                }
             }
         }
         
