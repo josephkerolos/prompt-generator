@@ -3,7 +3,7 @@
 nixPkgs = ["nodejs"]
 
 [start]
-cmd = "npm start"
+cmd = "node simple-server.js"
 
 [variables]
 NODE_ENV = "production"

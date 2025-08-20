@@ -47,6 +47,18 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    // Health check endpoint
+    if (pathname === '/health' && req.method === 'GET') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+            status: 'ok', 
+            port: PORT,
+            apiKey: API_KEY ? 'configured' : 'missing',
+            timestamp: new Date().toISOString()
+        }));
+        return;
+    }
+
     // Handle Upwork-inspired generation FIRST (before static files)
     if (pathname === '/api/scrape-upwork' && req.method === 'GET') {
         console.log('Fetching Upwork AI jobs...');
@@ -436,6 +448,11 @@ Output ONLY the HTML code, starting with <!DOCTYPE html>.`;
     
     // Serve static files (after API endpoints)
     else if (req.method === 'GET') {
+        // Quick response for root path
+        if (pathname === '/') {
+            console.log('Serving index.html');
+        }
+        
         let filePath = '.' + pathname;
         if (filePath === './') {
             filePath = './simple-index.html';
@@ -472,7 +489,11 @@ Output ONLY the HTML code, starting with <!DOCTYPE html>.`;
 });
 
 // Start server - bind to 0.0.0.0 for Docker/Railway compatibility
-server.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', (err) => {
+    if (err) {
+        console.error('Failed to start server:', err);
+        process.exit(1);
+    }
     console.log(`
 ╔════════════════════════════════════════════════════╗
 ║                                                    ║
@@ -493,4 +514,22 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('- Listening on all interfaces');
     console.log('- PORT:', PORT);
     console.log('- Process PID:', process.pid);
+});
+
+// Handle server errors
+server.on('error', (error) => {
+    console.error('Server error:', error);
+    if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use`);
+    }
+    process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
+    });
 });
