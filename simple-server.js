@@ -137,10 +137,10 @@ const server = http.createServer(async (req, res) => {
                 }
                 
                 const postData = JSON.stringify({
-                    model: 'claude-3-haiku-20240307',  // Using Haiku for speed
+                    model: 'claude-opus-4-1-20250805',  // Back to Opus 4.1 for quality
                     messages: [{ role: 'user', content: prompt }],
                     max_tokens: maxTokens,
-                    temperature: 0.3
+                    temperature: 0.5
                 });
 
                 const options = {
@@ -271,19 +271,26 @@ Format your response as JSON like this:
 
 Return ONLY the JSON, nothing else.`;
 
-                // Simplified HTML generation prompt for speed
-                const htmlPrompt = `Create a simple, functional web interface for "${requestData.businessName}".
+                // HTML generation prompt for high-quality output
+                const htmlPrompt = `You are building a SOPHISTICATED, PROFESSIONAL web interface for "${requestData.businessName}".
 
 ${requestData.prompt}
 
-Requirements:
-- Page title: "${requestData.businessName}"
-- Show the business name prominently
-- Include realistic data
-- Simple, clean design
-- Under 400 lines of HTML/CSS
+CRITICAL REQUIREMENTS:
+1. Page title MUST be: "${requestData.businessName}"
+2. Business name "${requestData.businessName}" must appear prominently in the interface
+3. Create a REALISTIC, FUNCTIONING APPLICATION INTERFACE - not a simple demo
+4. Include RICH, DETAILED, SPECIFIC data that matches the use case
+5. Use MODERN, PROFESSIONAL design with gradients, shadows, animations
+6. Show the application IN ACTIVE USE with real data
+7. Include interactive elements, hover effects, transitions
+8. Use sophisticated color schemes and typography
+9. Make it look like a $50,000+ custom application
+10. Include multiple sections, features, and data visualizations
 
-Output ONLY the HTML code, starting with <!DOCTYPE html>.`;
+Generate a COMPLETE, DETAILED HTML file with inline CSS and JavaScript.
+Aim for 500-800 lines of high-quality code.
+Output ONLY the HTML code, starting with <!DOCTYPE html> and ending with </html>.`;
                 
                 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
                 console.log('📋 Business Idea:', requestData.businessName || 'Generated');
@@ -291,19 +298,19 @@ Output ONLY the HTML code, starting with <!DOCTYPE html>.`;
                 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
                 
                 // Function to make API call with timeout and retry
-                const makeAPICall = (prompt, maxTokens = 3000, isRetry = false) => {
+                const makeAPICall = (prompt, maxTokens = 6000, isRetry = false) => {
                     return new Promise((resolve, reject) => {
                         if (!API_KEY) {
                             reject(new Error('CLAUDE_API_KEY not configured. Please set it in Railway Variables.'));
                             return;
                         }
                         
-                        // Use Haiku for now as Opus is experiencing delays
+                        // Use Opus 4.1 for high-quality generation
                         const postData = JSON.stringify({
-                            model: 'claude-3-haiku-20240307',
+                            model: 'claude-opus-4-1-20250805',
                             messages: [{ role: 'user', content: prompt }],
                             max_tokens: maxTokens,
-                            temperature: 0.2
+                            temperature: 0.5
                         });
 
                         const options = {
@@ -317,7 +324,7 @@ Output ONLY the HTML code, starting with <!DOCTYPE html>.`;
                                 'anthropic-version': '2023-06-01',
                                 'Content-Length': Buffer.byteLength(postData)
                             },
-                            timeout: 45000 // 45 second timeout
+                            timeout: 60000 // 60 second timeout for Opus quality
                         };
 
                         const apiReq = https.request(options, (apiRes) => {
@@ -329,7 +336,7 @@ Output ONLY the HTML code, starting with <!DOCTYPE html>.`;
                                     if (apiRes.statusCode === 504) {
                                         if (!isRetry) {
                                             console.log('Got 504, retrying with reduced tokens...');
-                                            makeAPICall(prompt, 2500, true)
+                                            makeAPICall(prompt, 4000, true)
                                                 .then(resolve)
                                                 .catch(reject);
                                         } else {
@@ -354,7 +361,7 @@ Output ONLY the HTML code, starting with <!DOCTYPE html>.`;
                             apiReq.destroy();
                             if (!isRetry) {
                                 console.log('Request timeout, retrying with reduced tokens...');
-                                makeAPICall(prompt, 2500, true)
+                                makeAPICall(prompt, 4000, true)
                                     .then(resolve)
                                     .catch(reject);
                             } else {
